@@ -256,8 +256,8 @@ const ClientView: React.FC = () => {
                     onClick={() => setIsScanning(true)}
                     className="w-full flex items-center justify-center gap-3 bg-gray-600 text-white font-bold text-lg px-6 py-3 rounded-xl shadow-lg hover:bg-gray-700 transform hover:scale-105 transition-all duration-300 ease-in-out"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h6v6H4V4zm0 10h6v6H4v-6zM14 4h6v6h-6V4zm0 10h6v6h-6v-6z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M4,4H10V10H4V4M6,6V8H8V6H6M4,14H10V20H4V14M6,16V18H8V16H6M14,4H20V10H14V4M16,6V8H18V6H16M14,14H16V16H14V14M18,14H20V16H18V14M16,18H18V20H16V18M18,18H20V20H18V18M14,16H16V18H14V16M16,14H18V16H16V14M14,18H16V20H14V18Z"/>
                     </svg>
                     Ler QR Code
                 </button>
