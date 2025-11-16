@@ -10,7 +10,7 @@ interface QrCodeModalProps {
 const QrCodeModal: React.FC<QrCodeModalProps> = ({ companyId, displayName, onClose }) => {
   // Constrói a URL para a qual o QR code apontará.
   // Leva para o domínio de produção com o ID da empresa na URL.
-  const joinUrl = `https://fluxoagil.vercel.app/${companyId}`;
+  const joinUrl = `https://fluxoagil.vercel.app/join/${companyId}`;
   
   // Usa uma API pública para gerar a imagem do QR code
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(joinUrl)}`;
