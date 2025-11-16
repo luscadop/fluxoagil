@@ -128,17 +128,8 @@ export const useQueue = () => {
   }, []);
 
   const resetQueue = useCallback(() => {
-    const currentState = getQueueStateFromStorage();
-    
-    // If there's a ticket being served when the queue is reset, move it to history.
-    const newHistory = currentState.currentTicket
-      ? [currentState.currentTicket, ...(currentState.history || [])]
-      : [...(currentState.history || [])];
-    
-    // Reset the queue but preserve the history
+    // This will reset everything, including the history, back to the initial state.
     const newState = getInitialState();
-    newState.history = newHistory.slice(0, 50);
-    
     setQueueStateInStorage(newState);
     setQueueState(newState);
   }, []);
