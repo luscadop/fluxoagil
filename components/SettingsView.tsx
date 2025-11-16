@@ -1,13 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 const SettingsView: React.FC = () => {
   const navigate = useNavigate();
+  const [hasTicket, setHasTicket] = useState(false);
+
+  useEffect(() => {
+    // Verifica se há uma senha na sessão quando o componente é montado.
+    const ticket = sessionStorage.getItem('fluxoagil-my-ticket');
+    setHasTicket(!!ticket);
+  }, []);
 
   const leaveQueue = () => {
     sessionStorage.removeItem('fluxoagil-my-ticket');
-    sessionStorage.removeItem('fluxoagil-company-id');
-    alert('Você saiu da fila. Para entrar em uma nova, escaneie o QR Code na tela inicial.');
+    alert('Você saiu da fila. Agora você pode pegar uma nova senha.');
+    setHasTicket(false);
     navigate('/');
   };
 
@@ -17,13 +24,14 @@ const SettingsView: React.FC = () => {
       
       <div className="space-y-6">
         <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
-          <h2 className="text-xl font-semibold mb-3 text-gray-200">Opções do Cliente</h2>
-          <p className="text-gray-400 mb-4 text-sm">Se você desistiu do atendimento ou quer trocar de fila, use o botão abaixo. Sua senha atual será removida.</p>
+          <h2 className="text-xl font-semibold mb-3 text-gray-200">Gerenciamento de Fila</h2>
+          <p className="text-gray-400 mb-4 text-sm">Se você pegou uma senha por engano ou deseja desistir, use o botão abaixo para sair da fila atual. Isso permitirá que você pegue uma nova senha.</p>
           <button 
             onClick={leaveQueue} 
-            className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+            disabled={!hasTicket}
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
           >
-            Sair da Fila / Mudar Empresa
+            {hasTicket ? 'Sair da Fila Atual' : 'Você não está em uma fila'}
           </button>
         </div>
         
