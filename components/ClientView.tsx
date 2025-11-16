@@ -1,10 +1,49 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQueue } from '../hooks/useQueue';
+
+/**
+ * Plays a subtle notification sound using the Web Audio API.
+ * This avoids the need for external audio files.
+ */
+const playNotificationSound = () => {
+  try {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    // Configure a subtle "ping" sound
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + 0.5);
+  } catch (e) {
+    console.error("Could not play notification sound.", e);
+  }
+};
+
 
 const ClientView: React.FC = () => {
   const { queueState, generateTicket, markCurrentAsAttended } = useQueue();
   const [myTicket, setMyTicket] = useState<string | null>(() => sessionStorage.getItem('fluxoagil-my-ticket'));
+  const prevCurrentTicketRef = useRef(queueState.currentTicket);
+
+  useEffect(() => {
+    const isMyTurn = myTicket && queueState.currentTicket === myTicket;
+    // Play sound only on the transition when the ticket is called
+    if (isMyTurn && prevCurrentTicketRef.current !== myTicket) {
+      playNotificationSound();
+    }
+    // Update ref for the next render
+    prevCurrentTicketRef.current = queueState.currentTicket;
+  }, [queueState.currentTicket, myTicket]);
+
 
   const handleGetTicket = () => {
     const newTicket = generateTicket();
