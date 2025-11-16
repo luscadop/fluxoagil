@@ -184,22 +184,18 @@ const ClientView: React.FC = () => {
   const handleScanSuccess = (scannedText: string) => {
     let companyIdFromScan = scannedText.trim();
     
-    // Tenta interpretar como uma URL ou texto simples
+    // Tenta interpretar como uma URL
     try {
         const url = new URL(scannedText);
-        const pathname = url.pathname.startsWith('/') ? url.pathname.substring(1) : url.pathname;
-        const parts = pathname.split('/');
-        
+        // Novo formato: https://fluxoagil.vercel.app/some-company-id
         if (url.hostname === 'fluxoagil.vercel.app') {
-            // Suporta /join/id-da-empresa
-            if (parts.length === 2 && parts[0] === 'join' && parts[1]) {
-                companyIdFromScan = parts[1];
-            // Suporta /id-da-empresa
-            } else if (parts.length === 1 && parts[0]) {
+            const pathname = url.pathname.startsWith('/') ? url.pathname.substring(1) : url.pathname;
+            const parts = pathname.split('/');
+            if (parts.length === 1 && parts[0]) {
                 companyIdFromScan = parts[0];
             }
         } 
-        // Suporta formato antigo com hash: .../#/join/id-da-empresa
+        // Formato antigo com hash: .../#/join/some-company-id
         else if (url.hash.startsWith('#/join/')) {
             companyIdFromScan = url.hash.substring('#/join/'.length);
         }
@@ -209,7 +205,8 @@ const ClientView: React.FC = () => {
 
     setIsScanning(false);
     setScanError(null);
-    setManualCompanyIdInput(companyIdFromScan); // Preenche o campo de input
+    localStorage.setItem('fluxoagil-company-id', companyIdFromScan);
+    setCompanyId(companyIdFromScan);
   };
   
   const handleScanError = (error: string) => {
