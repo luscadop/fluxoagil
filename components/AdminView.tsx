@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQueue } from '../hooks/useQueue';
 import { useCompanyProfile } from '../hooks/useCompanyProfile';
@@ -12,10 +11,10 @@ interface AdminViewProps {
 
 const ADMIN_COMPANY_ID_KEY = 'fluxoagil-admin-company-id';
 const COMPANY_PASSWORDS_KEY = 'fluxoagil-company-passwords';
-const PROFILES_KEY = 'fluxoagil-company-profiles';
+
 
 const AdminView: React.FC<AdminViewProps> = ({ onLogout }) => {
-  const [companyId, setCompanyId] = useState<string | null>(() => sessionStorage.getItem(ADMIN_COMPANY_ID_KEY));
+  const [companyId] = useState<string | null>(() => sessionStorage.getItem(ADMIN_COMPANY_ID_KEY));
   const { queueState, callNextTicket, resetQueue, finishCurrentTicket } = useQueue(companyId);
   const { profile, updateProfile } = useCompanyProfile(companyId);
 
@@ -41,59 +40,6 @@ const AdminView: React.FC<AdminViewProps> = ({ onLogout }) => {
       }
     }
   };
-
-  const handleCompanyIdChange = (newId: string) => {
-    const trimmedNewId = newId.trim().toLowerCase();
-    
-    if (!companyId || !window.confirm(`Tem certeza que deseja alterar o ID de "${companyId}" para "${trimmedNewId}"? Esta ação é irreversível e irá migrar todos os dados.`)) {
-      return;
-    }
-    
-    if (!trimmedNewId || trimmedNewId === companyId) {
-      alert("Novo ID inválido.");
-      return;
-    }
-    
-    // Check for conflicts
-    const passwords = JSON.parse(localStorage.getItem(COMPANY_PASSWORDS_KEY) || '{}');
-    if (passwords[trimmedNewId]) {
-      alert(`O ID "${trimmedNewId}" já existe. Por favor, escolha outro.`);
-      return;
-    }
-    
-    // 1. Migrate Queue
-    const oldQueueKey = `fluxoagil-queue-${companyId}`;
-    const newQueueKey = `fluxoagil-queue-${trimmedNewId}`;
-    const queueStateData = localStorage.getItem(oldQueueKey);
-    if (queueStateData) {
-      localStorage.setItem(newQueueKey, queueStateData);
-      localStorage.removeItem(oldQueueKey);
-    }
-    
-    // 2. Migrate Profile
-    const profiles = JSON.parse(localStorage.getItem(PROFILES_KEY) || '{}');
-    if (profiles[companyId]) {
-      profiles[trimmedNewId] = profiles[companyId];
-      delete profiles[companyId];
-      localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
-    }
-    
-    // 3. Migrate Password
-    if (passwords[companyId]) {
-      passwords[trimmedNewId] = passwords[companyId];
-      delete passwords[companyId];
-      localStorage.setItem(COMPANY_PASSWORDS_KEY, JSON.stringify(passwords));
-    }
-    
-    // 4. Update session
-    sessionStorage.setItem(ADMIN_COMPANY_ID_KEY, trimmedNewId);
-    
-    // 5. Update state
-    setCompanyId(trimmedNewId);
-    
-    alert(`ID da empresa alterado para "${trimmedNewId}" com sucesso!`);
-    setIsEditModalOpen(false); // Close modal after change
-  };
   
   return (
     <div>
@@ -103,7 +49,6 @@ const AdminView: React.FC<AdminViewProps> = ({ onLogout }) => {
           initialProfile={profile}
           onSave={handleSaveProfile}
           onPasswordChange={handlePasswordChange}
-          onCompanyIdChange={handleCompanyIdChange}
           onClose={() => setIsEditModalOpen(false)}
         />
       )}

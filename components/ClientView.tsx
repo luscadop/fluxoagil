@@ -183,21 +183,26 @@ const ClientView: React.FC = () => {
 
   const handleScanSuccess = (scannedText: string) => {
     let companyIdFromScan = scannedText.trim();
-    // Verifica se o texto escaneado é uma URL e tenta extrair o companyId
+    
+    // Tenta interpretar como uma URL
     try {
-      const url = new URL(scannedText);
-      // Ex: https://fluxoagil.vercel.app/join/my-company-id
-      if (url.hostname === 'fluxoagil.vercel.app' || url.hostname === 'localhost' || url.hostname.endsWith('.aistudio.dev')) {
-        const pathname = url.pathname;
-        const parts = pathname.split('/').filter(p => p); // parts = ['join', 'my-company-id']
-        if (parts.length === 2 && parts[0] === 'join' && parts[1]) {
-          companyIdFromScan = parts[1];
+        const url = new URL(scannedText);
+        // Novo formato: https://fluxoagil.vercel.app/some-company-id
+        if (url.hostname === 'fluxoagil.vercel.app') {
+            const pathname = url.pathname.startsWith('/') ? url.pathname.substring(1) : url.pathname;
+            const parts = pathname.split('/');
+            if (parts.length === 1 && parts[0]) {
+                companyIdFromScan = parts[0];
+            }
+        } 
+        // Formato antigo com hash: .../#/join/some-company-id
+        else if (url.hash.startsWith('#/join/')) {
+            companyIdFromScan = url.hash.substring('#/join/'.length);
         }
-      }
     } catch (e) {
-      // Não é uma URL válida, assume que é o companyId diretamente
+        // Não é uma URL, assume que o texto é o ID da empresa
     }
-  
+
     setIsScanning(false);
     setScanError(null);
     localStorage.setItem('fluxoagil-company-id', companyIdFromScan);
