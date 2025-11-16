@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -22,7 +23,7 @@ const SettingsView: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-gray-100 text-center sm:text-left">Ajustes e Acessos</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-100 text-center sm:text-left">Configurações e Acessos</h1>
       
       <div className="space-y-6">
         <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
