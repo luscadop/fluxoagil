@@ -57,6 +57,37 @@ const QrScanner: React.FC<{ onScanSuccess: (companyId: string) => void; onScanEr
     return <div id="qr-reader" className="w-full max-w-sm mx-auto border-2 border-dashed border-gray-600 rounded-2xl p-4"></div>;
 };
 
+// SVG icons for the new info card
+const MapPinIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+  </svg>
+);
+
+const PhoneIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 6.75Z" />
+  </svg>
+);
+
+const GlobeAltIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A11.953 11.953 0 0 1 12 16.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253M18.716 15.751A9.004 9.004 0 0 1 12 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m6.716 12.751A9.004 9.004 0 0 0 12 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3" />
+  </svg>
+);
+
+const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M7.8,2H16.2C19.4,2 22,4.6 22,7.8V16.2A5.2,5.2 0 0,1 16.2,21.4H7.8C4.6,21.4 2,18.8 2,16.2V7.8A5.2,5.2 0 0,1 7.8,2M7.6,4A3.6,3.6 0 0,0 4,7.6V16.4C4,18.39 5.61,20 7.6,20H16.4A3.6,3.6 0 0,0 20,16.4V7.6C20,5.61 18.39,4 16.4,4H7.6M17.25,5.5A1.25,1.25 0 0,1 18.5,6.75A1.25,1.25 0 0,1 17.25,8A1.25,1.25 0 0,1 16,6.75A1.25,1.25 0 0,1 17.25,5.5M12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z" />
+    </svg>
+);
+const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z" />
+    </svg>
+);
+
 
 const ClientView: React.FC = () => {
   const [companyId, setCompanyId] = useState<string | null>(() => sessionStorage.getItem('fluxoagil-company-id'));
@@ -207,16 +238,18 @@ const ClientView: React.FC = () => {
 
   if (!myTicket) {
     return (
-      <div className="flex flex-col items-center justify-center text-center p-8">
-        <div className="flex items-center gap-4 mb-2">
-            {profile?.logoBase64 && <img src={profile.logoBase64} alt="Logo" className="h-12 w-12 rounded-full object-cover"/>}
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-100">
-                Fila para: <span className="text-sky-400">{profile?.displayName || companyId}</span>
-            </h1>
+      <div className="flex flex-col items-center justify-center text-center p-4 sm:p-8">
+        <div className="w-full max-w-md text-center">
+            <div className="flex justify-center items-center gap-4 mb-2">
+                {profile?.logoBase64 && <img src={profile.logoBase64} alt="Logo" className="h-16 w-16 rounded-full object-cover shadow-lg"/>}
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-100 text-left">
+                    {profile?.displayName || companyId}
+                </h1>
+            </div>
+            <p className="text-lg text-gray-400 mb-6">Verifique o status da fila e retire sua senha.</p>
         </div>
-        <p className="text-lg text-gray-400 mb-8">Consulte o status da fila e retire sua senha de atendimento.</p>
 
-        <div className="bg-gray-800 rounded-xl p-6 w-full max-w-sm mb-8 shadow-inner">
+        <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md mb-8 shadow-inner">
           <div className="grid grid-cols-2 gap-4 divide-x divide-gray-700">
             <div className="text-center px-2">
               <p className="text-base text-gray-400">Senha Atual</p>
@@ -235,6 +268,42 @@ const ClientView: React.FC = () => {
         >
           PEGAR SENHA
         </button>
+
+        <div className="bg-gray-800 border border-gray-700 rounded-2xl p-5 w-full max-w-md mt-10 text-left shadow-lg">
+          <div className="space-y-4 text-gray-300">
+            {profile?.address && (
+              <div className="flex items-start gap-3">
+                <MapPinIcon className="h-6 w-6 text-sky-400 flex-shrink-0 mt-1" />
+                <span>{profile.address}</span>
+              </div>
+            )}
+            {profile?.phone && (
+              <div className="flex items-center gap-3">
+                <PhoneIcon className="h-5 w-5 text-sky-400 flex-shrink-0" />
+                <span>{profile.phone}</span>
+              </div>
+            )}
+             {(profile?.socials?.website || profile?.socials?.instagram || profile?.socials?.facebook) && (
+              <div className="flex items-center gap-4 pt-4 border-t border-gray-700 mt-4">
+                {profile.socials.website && (
+                    <a href={profile.socials.website} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-sky-400 transition-colors" title="Website">
+                        <GlobeAltIcon className="h-7 w-7" />
+                    </a>
+                )}
+                {profile.socials.instagram && (
+                    <a href={`https://instagram.com/${profile.socials.instagram}`} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-sky-400 transition-colors" title="Instagram">
+                        <InstagramIcon className="h-7 w-7" />
+                    </a>
+                )}
+                {profile.socials.facebook && (
+                    <a href={`https://facebook.com/${profile.socials.facebook}`} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-sky-400 transition-colors" title="Facebook">
+                        <FacebookIcon className="h-7 w-7" />
+                    </a>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
