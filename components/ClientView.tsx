@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQueue } from '../hooks/useQueue';
 import { useCompanyProfile } from '../hooks/useCompanyProfile';
+import type { CompanyProfile } from '../types';
+
 
 declare const Html5Qrcode: any;
 
@@ -88,9 +90,55 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
+const CompanyProfileCard: React.FC<{ profile: CompanyProfile | null; containerClassName?: string }> = ({ 
+  profile, 
+  containerClassName = "bg-gray-800 border border-gray-700 rounded-2xl p-5 text-left shadow-lg" 
+}) => {
+  if (!profile || (!profile.address && !profile.phone && !profile.socials?.website && !profile.socials?.instagram && !profile.socials?.facebook)) {
+    return null;
+  }
+
+  return (
+    <div className={containerClassName}>
+      <div className="space-y-4 text-gray-300">
+        {profile?.address && (
+          <div className="flex items-start gap-3">
+            <MapPinIcon className="h-6 w-6 text-sky-400 flex-shrink-0 mt-1" />
+            <span>{profile.address}</span>
+          </div>
+        )}
+        {profile?.phone && (
+          <div className="flex items-center gap-3">
+            <PhoneIcon className="h-5 w-5 text-sky-400 flex-shrink-0" />
+            <span>{profile.phone}</span>
+          </div>
+        )}
+        {(profile?.socials?.website || profile?.socials?.instagram || profile?.socials?.facebook) && (
+          <div className="flex items-center gap-4 pt-4 border-t border-gray-700 mt-4">
+            {profile.socials.website && (
+                <a href={profile.socials.website} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-sky-400 transition-colors" title="Website">
+                    <GlobeAltIcon className="h-7 w-7" />
+                </a>
+            )}
+            {profile.socials.instagram && (
+                <a href={`https://instagram.com/${profile.socials.instagram}`} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-sky-400 transition-colors" title="Instagram">
+                    <InstagramIcon className="h-7 w-7" />
+                </a>
+            )}
+            {profile.socials.facebook && (
+                <a href={`https://facebook.com/${profile.socials.facebook}`} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-sky-400 transition-colors" title="Facebook">
+                    <FacebookIcon className="h-7 w-7" />
+                </a>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const ClientView: React.FC = () => {
-  const [companyId, setCompanyId] = useState<string | null>(() => sessionStorage.getItem('fluxoagil-company-id'));
+  const [companyId, setCompanyId] = useState<string | null>(() => localStorage.getItem('fluxoagil-company-id'));
   const { queueState, generateTicket } = useQueue(companyId);
   const { profile } = useCompanyProfile(companyId);
   const [myTicket, setMyTicket] = useState<string | null>(() => sessionStorage.getItem('fluxoagil-my-ticket'));
@@ -135,7 +183,7 @@ const ClientView: React.FC = () => {
   const handleScanSuccess = (scannedCompanyId: string) => {
     setIsScanning(false);
     setScanError(null);
-    sessionStorage.setItem('fluxoagil-company-id', scannedCompanyId);
+    localStorage.setItem('fluxoagil-company-id', scannedCompanyId);
     setCompanyId(scannedCompanyId);
   };
   
@@ -150,7 +198,7 @@ const ClientView: React.FC = () => {
     e.preventDefault();
     const trimmedId = manualCompanyIdInput.trim();
     if (trimmedId) {
-      sessionStorage.setItem('fluxoagil-company-id', trimmedId);
+      localStorage.setItem('fluxoagil-company-id', trimmedId);
       setCompanyId(trimmedId);
     }
   };
@@ -268,41 +316,8 @@ const ClientView: React.FC = () => {
         >
           PEGAR SENHA
         </button>
-
-        <div className="bg-gray-800 border border-gray-700 rounded-2xl p-5 w-full max-w-md mt-10 text-left shadow-lg">
-          <div className="space-y-4 text-gray-300">
-            {profile?.address && (
-              <div className="flex items-start gap-3">
-                <MapPinIcon className="h-6 w-6 text-sky-400 flex-shrink-0 mt-1" />
-                <span>{profile.address}</span>
-              </div>
-            )}
-            {profile?.phone && (
-              <div className="flex items-center gap-3">
-                <PhoneIcon className="h-5 w-5 text-sky-400 flex-shrink-0" />
-                <span>{profile.phone}</span>
-              </div>
-            )}
-             {(profile?.socials?.website || profile?.socials?.instagram || profile?.socials?.facebook) && (
-              <div className="flex items-center gap-4 pt-4 border-t border-gray-700 mt-4">
-                {profile.socials.website && (
-                    <a href={profile.socials.website} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-sky-400 transition-colors" title="Website">
-                        <GlobeAltIcon className="h-7 w-7" />
-                    </a>
-                )}
-                {profile.socials.instagram && (
-                    <a href={`https://instagram.com/${profile.socials.instagram}`} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-sky-400 transition-colors" title="Instagram">
-                        <InstagramIcon className="h-7 w-7" />
-                    </a>
-                )}
-                {profile.socials.facebook && (
-                    <a href={`https://facebook.com/${profile.socials.facebook}`} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-sky-400 transition-colors" title="Facebook">
-                        <FacebookIcon className="h-7 w-7" />
-                    </a>
-                )}
-              </div>
-            )}
-          </div>
+        <div className="w-full max-w-md mt-10">
+          <CompanyProfileCard profile={profile} />
         </div>
       </div>
     );
@@ -312,46 +327,57 @@ const ClientView: React.FC = () => {
   const estimatedTime = (peopleInFront + 1) * 5;
 
   return (
-    <div className="bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-10 max-w-2xl mx-auto text-center">
-      <div className="mb-8">
-        <p className="text-xl text-gray-400">Sua Senha</p>
-        <h2 className="text-6xl sm:text-8xl font-bold text-sky-400 tracking-tight">{myTicket}</h2>
-      </div>
-      
-      <div className="border-t border-b border-gray-700 py-6 my-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-          <p className="text-lg text-gray-400">Senha Atual</p>
-          <p className="text-4xl sm:text-5xl font-bold text-gray-100">{queueState.currentTicket || '---'}</p>
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-10 text-center">
+        <div className="flex justify-center items-center gap-4 mb-6">
+            {profile?.logoBase64 && <img src={profile.logoBase64} alt="Logo" className="h-12 w-12 rounded-full object-cover shadow-lg"/>}
+            <h1 className="text-2xl font-bold text-gray-100">
+                {profile?.displayName || companyId}
+            </h1>
         </div>
-        <div>
-          <p className="text-lg text-gray-400">Tempo Estimado</p>
-          <p className="text-4xl sm:text-5xl font-bold text-gray-100">
-            {peopleInFront >= 0 ? `~${estimatedTime} min` : 'Atendido'}
-          </p>
+
+        <div className="mb-8">
+          <p className="text-xl text-gray-400">Sua Senha</p>
+          <h2 className="text-6xl sm:text-8xl font-bold text-sky-400 tracking-tight">{myTicket}</h2>
+        </div>
+        
+        <div className="border-t border-b border-gray-700 py-6 my-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <p className="text-lg text-gray-400">Senha Atual</p>
+            <p className="text-4xl sm:text-5xl font-bold text-gray-100">{queueState.currentTicket || '---'}</p>
+          </div>
+          <div>
+            <p className="text-lg text-gray-400">Tempo Estimado</p>
+            <p className="text-4xl sm:text-5xl font-bold text-gray-100">
+              {peopleInFront >= 0 ? `~${estimatedTime} min` : 'Atendido'}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <h3 className="text-xl font-semibold text-gray-200 mb-3">Próximos na Fila</h3>
+          {queueState.queue.length > 0 ? (
+            <ul className="space-y-2">
+              {queueState.queue.slice(0, 5).map(ticket => (
+                <li 
+                  key={ticket} 
+                  className={`py-2 px-4 rounded-lg text-lg font-medium ${ticket === myTicket ? 'bg-sky-500/20 text-sky-300 border border-sky-500' : 'bg-gray-700 text-gray-300'}`}
+                >
+                  {ticket}
+                </li>
+              ))}
+              {queueState.queue.length > 5 && <li className="text-gray-400 pt-2">... e mais {queueState.queue.length - 5}</li>}
+            </ul>
+          ) : (
+            <p className="text-gray-400">
+              {peopleInFront >= 0 ? 'Você é o próximo a ser chamado!' : 'A fila está vazia.'}
+            </p>
+          )}
+        </div>
+        <div className="mt-10 pt-6 border-t border-gray-700">
+             <CompanyProfileCard profile={profile} containerClassName="text-left" />
         </div>
       </div>
-
-      <div className="mt-8">
-        <h3 className="text-xl font-semibold text-gray-200 mb-3">Próximos na Fila</h3>
-        {queueState.queue.length > 0 ? (
-          <ul className="space-y-2">
-            {queueState.queue.slice(0, 5).map(ticket => (
-              <li 
-                key={ticket} 
-                className={`py-2 px-4 rounded-lg text-lg font-medium ${ticket === myTicket ? 'bg-sky-500/20 text-sky-300 border border-sky-500' : 'bg-gray-700 text-gray-300'}`}
-              >
-                {ticket}
-              </li>
-            ))}
-            {queueState.queue.length > 5 && <li className="text-gray-400 pt-2">... e mais {queueState.queue.length - 5}</li>}
-          </ul>
-        ) : (
-          <p className="text-gray-400">
-            {peopleInFront >= 0 ? 'Você é o próximo a ser chamado!' : 'A fila está vazia.'}
-          </p>
-        )}
-      </div>
-
     </div>
   );
 };

@@ -8,8 +8,9 @@ const HistoryView: React.FC = () => {
   const [companyId, setCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for either client or admin company ID in session storage
-    const clientCompanyId = sessionStorage.getItem(CLIENT_COMPANY_ID_KEY);
+    // Prioriza o ID da empresa do cliente (que é persistente)
+    const clientCompanyId = localStorage.getItem(CLIENT_COMPANY_ID_KEY);
+    // Usa o ID do admin (da sessão atual) como fallback
     const adminCompanyId = sessionStorage.getItem(ADMIN_COMPANY_ID_KEY);
     setCompanyId(clientCompanyId || adminCompanyId);
   }, []);
