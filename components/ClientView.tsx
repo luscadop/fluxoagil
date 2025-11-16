@@ -187,21 +187,15 @@ const ClientView: React.FC = () => {
     // Tenta interpretar como uma URL
     try {
         const url = new URL(scannedText);
-        const pathname = url.pathname; // ex: "/join/empresa-xyz" ou "/empresa-xyz"
-        
+        // Novo formato: https://fluxoagil.vercel.app/some-company-id
         if (url.hostname === 'fluxoagil.vercel.app') {
-            const parts = pathname.split('/').filter(p => p); // Remove partes vazias
-            
-            // Novo formato: /join/id-da-empresa
-            if (parts.length === 2 && parts[0] === 'join' && parts[1]) {
-                companyIdFromScan = parts[1];
-            } 
-            // Formato antigo direto: /id-da-empresa
-            else if (parts.length === 1 && parts[0]) {
+            const pathname = url.pathname.startsWith('/') ? url.pathname.substring(1) : url.pathname;
+            const parts = pathname.split('/');
+            if (parts.length === 1 && parts[0]) {
                 companyIdFromScan = parts[0];
             }
         } 
-        // Formato antigo com hash: .../#/join/id-da-empresa
+        // Formato antigo com hash: .../#/join/some-company-id
         else if (url.hash.startsWith('#/join/')) {
             companyIdFromScan = url.hash.substring('#/join/'.length);
         }

@@ -55,7 +55,7 @@ const App: React.FC = () => {
             <Route path="/tv" element={<TvView />} />
             <Route path="/history" element={<HistoryView />} />
             <Route path="/settings" element={<SettingsView />} />
-            <Route path="/join/:companyId" element={<JoinView />} />
+            <Route path="/:companyId" element={<JoinView />} />
           </Routes>
         </main>
 
