@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { useQueue } from '../hooks/useQueue';
 import { useCompanyProfile } from '../hooks/useCompanyProfile';
 import EditProfileModal from './EditProfileModal';
+import QrCodeModal from './QrCodeModal';
 import { CompanyProfile } from '../types';
 
 interface AdminViewProps {
@@ -10,18 +12,19 @@ interface AdminViewProps {
 
 const ADMIN_COMPANY_ID_KEY = 'fluxoagil-admin-company-id';
 const COMPANY_PASSWORDS_KEY = 'fluxoagil-company-passwords';
-
+const PROFILES_KEY = 'fluxoagil-company-profiles';
 
 const AdminView: React.FC<AdminViewProps> = ({ onLogout }) => {
-  const [companyId] = useState<string | null>(() => sessionStorage.getItem(ADMIN_COMPANY_ID_KEY));
+  const [companyId, setCompanyId] = useState<string | null>(() => sessionStorage.getItem(ADMIN_COMPANY_ID_KEY));
   const { queueState, callNextTicket, resetQueue, finishCurrentTicket } = useQueue(companyId);
   const { profile, updateProfile } = useCompanyProfile(companyId);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   const handleSaveProfile = (updatedProfile: CompanyProfile) => {
     updateProfile(updatedProfile);
-    setIsModalOpen(false);
+    setIsEditModalOpen(false);
   };
 
   const handlePasswordChange = (newPassword: string) => {
@@ -38,16 +41,78 @@ const AdminView: React.FC<AdminViewProps> = ({ onLogout }) => {
       }
     }
   };
+
+  const handleCompanyIdChange = (newId: string) => {
+    const trimmedNewId = newId.trim().toLowerCase();
+    
+    if (!companyId || !window.confirm(`Tem certeza que deseja alterar o ID de "${companyId}" para "${trimmedNewId}"? Esta ação é irreversível e irá migrar todos os dados.`)) {
+      return;
+    }
+    
+    if (!trimmedNewId || trimmedNewId === companyId) {
+      alert("Novo ID inválido.");
+      return;
+    }
+    
+    // Check for conflicts
+    const passwords = JSON.parse(localStorage.getItem(COMPANY_PASSWORDS_KEY) || '{}');
+    if (passwords[trimmedNewId]) {
+      alert(`O ID "${trimmedNewId}" já existe. Por favor, escolha outro.`);
+      return;
+    }
+    
+    // 1. Migrate Queue
+    const oldQueueKey = `fluxoagil-queue-${companyId}`;
+    const newQueueKey = `fluxoagil-queue-${trimmedNewId}`;
+    const queueStateData = localStorage.getItem(oldQueueKey);
+    if (queueStateData) {
+      localStorage.setItem(newQueueKey, queueStateData);
+      localStorage.removeItem(oldQueueKey);
+    }
+    
+    // 2. Migrate Profile
+    const profiles = JSON.parse(localStorage.getItem(PROFILES_KEY) || '{}');
+    if (profiles[companyId]) {
+      profiles[trimmedNewId] = profiles[companyId];
+      delete profiles[companyId];
+      localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+    }
+    
+    // 3. Migrate Password
+    if (passwords[companyId]) {
+      passwords[trimmedNewId] = passwords[companyId];
+      delete passwords[companyId];
+      localStorage.setItem(COMPANY_PASSWORDS_KEY, JSON.stringify(passwords));
+    }
+    
+    // 4. Update session
+    sessionStorage.setItem(ADMIN_COMPANY_ID_KEY, trimmedNewId);
+    
+    // 5. Update state
+    setCompanyId(trimmedNewId);
+    
+    alert(`ID da empresa alterado para "${trimmedNewId}" com sucesso!`);
+    setIsEditModalOpen(false); // Close modal after change
+  };
   
   return (
     <div>
-      {isModalOpen && profile && companyId && (
+      {isEditModalOpen && profile && companyId && (
         <EditProfileModal
           companyId={companyId}
           initialProfile={profile}
           onSave={handleSaveProfile}
           onPasswordChange={handlePasswordChange}
-          onClose={() => setIsModalOpen(false)}
+          onCompanyIdChange={handleCompanyIdChange}
+          onClose={() => setIsEditModalOpen(false)}
+        />
+      )}
+
+      {isQrModalOpen && companyId && (
+        <QrCodeModal
+          companyId={companyId}
+          displayName={profile?.displayName || companyId}
+          onClose={() => setIsQrModalOpen(false)}
         />
       )}
 
@@ -67,16 +132,26 @@ const AdminView: React.FC<AdminViewProps> = ({ onLogout }) => {
             </p>
             </div>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-gray-200 font-semibold py-2 px-4 rounded-lg transition-colors"
-          aria-label="Editar perfil da empresa"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z" />
-          </svg>
-          <span>Editar Perfil</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap justify-center">
+          <button 
+            onClick={() => setIsQrModalOpen(true)}
+            className="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+            aria-label="Exibir QR Code da Fila"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM13 13h2v2h-2zM15 15h2v2h-2zM13 17h2v2h-2zM17 17h2v2h-2zM19 19h2v2h-2zM15 19h2v2h-2zM17 13h2v2h-2zM19 15h2v2h-2z" /></svg>
+            <span>QR Code da Fila</span>
+          </button>
+          <button 
+            onClick={() => setIsEditModalOpen(true)}
+            className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-gray-200 font-semibold py-2 px-4 rounded-lg transition-colors"
+            aria-label="Editar perfil da empresa"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z" />
+            </svg>
+            <span>Editar Perfil</span>
+          </button>
+        </div>
       </div>
 
 

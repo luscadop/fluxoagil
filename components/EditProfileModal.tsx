@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CompanyProfile } from '../types';
 
@@ -6,10 +7,11 @@ interface EditProfileModalProps {
   initialProfile: CompanyProfile;
   onSave: (profile: CompanyProfile) => void;
   onPasswordChange: (password: string) => void;
+  onCompanyIdChange: (newId: string) => void;
   onClose: () => void;
 }
 
-const EditProfileModal: React.FC<EditProfileModalProps> = ({ companyId, initialProfile, onSave, onPasswordChange, onClose }) => {
+const EditProfileModal: React.FC<EditProfileModalProps> = ({ companyId, initialProfile, onSave, onPasswordChange, onCompanyIdChange, onClose }) => {
   const [displayName, setDisplayName] = useState(initialProfile.displayName);
   const [address, setAddress] = useState(initialProfile.address || '');
   const [phone, setPhone] = useState(initialProfile.phone || '');
@@ -23,6 +25,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ companyId, initialP
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordMessage, setPasswordMessage] = useState({ text: '', type: '' });
+
+  const [newCompanyId, setNewCompanyId] = useState('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,6 +77,14 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ companyId, initialP
     setPasswordMessage({ text: 'Senha alterada com sucesso!', type: 'success' });
     setNewPassword('');
     setConfirmPassword('');
+  };
+  
+  const handleIdUpdate = () => {
+    if (newCompanyId.trim()) {
+      onCompanyIdChange(newCompanyId);
+    } else {
+      alert('O novo ID não pode estar vazio.');
+    }
   };
 
   return (
@@ -139,6 +151,30 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ companyId, initialP
                      className="w-full sm:w-auto bg-amber-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-amber-700 transition-colors"
                    >
                      Alterar Senha
+                   </button>
+                </div>
+              </div>
+
+              {/* Danger Zone - Change Company ID */}
+              <div className="pt-4 mt-4 border-t border-gray-700">
+                <h3 className="text-lg font-semibold text-red-500 border-b border-red-900 pb-2 mb-3">Zona de Perigo</h3>
+                <p className="text-gray-400 text-sm mb-4">Alterar o ID da empresa é uma ação permanente e migrará todos os dados da fila. O novo ID deve ser único, sem espaços ou caracteres especiais. Use com cuidado.</p>
+                <div className="flex flex-col sm:flex-row items-stretch gap-3">
+                   <input 
+                     type="text" 
+                     placeholder="Novo ID da Empresa" 
+                     value={newCompanyId} 
+                     onChange={(e) => setNewCompanyId(e.target.value)} 
+                     className="flex-grow px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" 
+                     pattern="[a-z0-9-]+"
+                   />
+                   <button 
+                     type="button"
+                     onClick={handleIdUpdate}
+                     disabled={!newCompanyId.trim()}
+                     className="bg-red-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+                   >
+                     Alterar ID
                    </button>
                 </div>
               </div>

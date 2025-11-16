@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useQueue } from '../hooks/useQueue';
 import { useCompanyProfile } from '../hooks/useCompanyProfile';
@@ -180,11 +181,27 @@ const ClientView: React.FC = () => {
     setMyTicket(null);
   };
 
-  const handleScanSuccess = (scannedCompanyId: string) => {
+  const handleScanSuccess = (scannedText: string) => {
+    let companyIdFromScan = scannedText.trim();
+    // Verifica se o texto escaneado é uma URL e tenta extrair o companyId
+    try {
+      const url = new URL(scannedText);
+      // Ex: https://fluxoagil.vercel.app/join/my-company-id
+      if (url.hostname === 'fluxoagil.vercel.app' || url.hostname === 'localhost' || url.hostname.endsWith('.aistudio.dev')) {
+        const pathname = url.pathname;
+        const parts = pathname.split('/').filter(p => p); // parts = ['join', 'my-company-id']
+        if (parts.length === 2 && parts[0] === 'join' && parts[1]) {
+          companyIdFromScan = parts[1];
+        }
+      }
+    } catch (e) {
+      // Não é uma URL válida, assume que é o companyId diretamente
+    }
+  
     setIsScanning(false);
     setScanError(null);
-    localStorage.setItem('fluxoagil-company-id', scannedCompanyId);
-    setCompanyId(scannedCompanyId);
+    localStorage.setItem('fluxoagil-company-id', companyIdFromScan);
+    setCompanyId(companyIdFromScan);
   };
   
   const handleScanError = (error: string) => {
@@ -256,9 +273,7 @@ const ClientView: React.FC = () => {
                     onClick={() => setIsScanning(true)}
                     className="w-full flex items-center justify-center gap-3 bg-gray-600 text-white font-bold text-lg px-6 py-3 rounded-xl shadow-lg hover:bg-gray-700 transform hover:scale-105 transition-all duration-300 ease-in-out"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M4,4H10V10H4V4M6,6V8H8V6H6M4,14H10V20H4V14M6,16V18H8V16H6M14,4H20V10H14V4M16,6V8H18V6H16M14,14H16V16H14V14M18,14H20V16H18V14M16,18H18V20H16V18M18,18H20V20H18V18M14,16H16V18H14V16M16,14H18V16H16V14M14,18H16V20H14V18Z"/>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM13 13h2v2h-2zM15 15h2v2h-2zM13 17h2v2h-2zM17 17h2v2h-2zM19 19h2v2h-2zM15 19h2v2h-2zM17 13h2v2h-2zM19 15h2v2h-2z" /></svg>
                     Ler QR Code
                 </button>
             </div>
