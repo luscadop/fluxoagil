@@ -1,0 +1,5 @@
+{
+  "name": "FLUXOÁGIL - Gerenciador de Filas",
+  "description": "Um sistema de gerenciamento de filas em tempo real que utiliza o localStorage para sincronização entre diferentes visualizações (Cliente, Admin, TV).",
+  "requestFramePermissions": []
+}
