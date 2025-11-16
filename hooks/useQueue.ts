@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { QueueState } from '../types';
 
-const QUEUE_STORAGE_KEY = 'fluxoagil-queue';
+const getStorageKey = (companyId: string | null) => companyId ? `fluxoagil-queue-${companyId}` : null;
 const TICKET_PREFIX = 'A';
 
 const getInitialState = (): QueueState => {
@@ -13,12 +13,14 @@ const getInitialState = (): QueueState => {
   };
 };
 
-const getQueueStateFromStorage = (): QueueState => {
+const getQueueStateFromStorage = (companyId: string | null): QueueState => {
+  const QUEUE_STORAGE_KEY = getStorageKey(companyId);
+  if (!QUEUE_STORAGE_KEY) return getInitialState();
+
   try {
     const storedState = localStorage.getItem(QUEUE_STORAGE_KEY);
     if (storedState) {
       const parsed = JSON.parse(storedState) as QueueState;
-      // Ensure history is an array for backwards compatibility
       if (!Array.isArray(parsed.history)) {
         parsed.history = [];
       }
@@ -30,18 +32,27 @@ const getQueueStateFromStorage = (): QueueState => {
   return getInitialState();
 };
 
-const setQueueStateInStorage = (state: QueueState) => {
-  localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(state));
+const setQueueStateInStorage = (state: QueueState, companyId: string | null) => {
+  const QUEUE_STORAGE_KEY = getStorageKey(companyId);
+  if (QUEUE_STORAGE_KEY) {
+    localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(state));
+  }
 };
 
-export const useQueue = () => {
-  const [queueState, setQueueState] = useState<QueueState>(getQueueStateFromStorage);
+export const useQueue = (companyId: string | null) => {
+  const [queueState, setQueueState] = useState<QueueState>(() => getQueueStateFromStorage(companyId));
+
+  useEffect(() => {
+    // If companyId changes, we need to reload the state from storage
+    setQueueState(getQueueStateFromStorage(companyId));
+  }, [companyId]);
 
   const handleStorageChange = useCallback((event: StorageEvent) => {
+    const QUEUE_STORAGE_KEY = getStorageKey(companyId);
     if (event.key === QUEUE_STORAGE_KEY) {
-      setQueueState(getQueueStateFromStorage());
+      setQueueState(getQueueStateFromStorage(companyId));
     }
-  }, []);
+  }, [companyId]);
 
   useEffect(() => {
     window.addEventListener('storage', handleStorageChange);
@@ -51,7 +62,8 @@ export const useQueue = () => {
   }, [handleStorageChange]);
 
   const generateTicket = useCallback(() => {
-    const currentState = getQueueStateFromStorage();
+    if (!companyId) return null;
+    const currentState = getQueueStateFromStorage(companyId);
     const newTicketNumber = currentState.nextTicketNumber;
     const newTicket = `${TICKET_PREFIX}-${String(newTicketNumber).padStart(3, '0')}`;
     
@@ -61,20 +73,20 @@ export const useQueue = () => {
       nextTicketNumber: newTicketNumber + 1,
     };
     
-    setQueueStateInStorage(newState);
-    setQueueState(newState); // Update local state immediately
+    setQueueStateInStorage(newState, companyId);
+    setQueueState(newState);
     return newTicket;
-  }, []);
+  }, [companyId]);
 
   const callNextTicket = useCallback(() => {
-    const currentState = getQueueStateFromStorage();
+    if (!companyId) return;
+    const currentState = getQueueStateFromStorage(companyId);
     if (currentState.queue.length === 0) {
       return;
     }
     
     const [nextTicket, ...remainingQueue] = currentState.queue;
     
-    // Add the ticket that was being served to the history
     const newHistory = currentState.currentTicket
       ? [currentState.currentTicket, ...(currentState.history || [])]
       : [...(currentState.history || [])];
@@ -83,56 +95,38 @@ export const useQueue = () => {
       ...currentState,
       currentTicket: nextTicket,
       queue: remainingQueue,
-      history: newHistory.slice(0, 50), // Keep last 50 tickets in history
-    };
-    
-    setQueueStateInStorage(newState);
-    setQueueState(newState);
-  }, []);
-  
-  const finishCurrentTicket = useCallback(() => {
-    const currentState = getQueueStateFromStorage();
-    if (!currentState.currentTicket) {
-      return; // No ticket to finish
-    }
-
-    const newHistory = [currentState.currentTicket, ...(currentState.history || [])];
-    
-    const newState: QueueState = {
-      ...currentState,
-      currentTicket: null, // Clear current ticket
       history: newHistory.slice(0, 50),
     };
-
-    setQueueStateInStorage(newState);
+    
+    setQueueStateInStorage(newState, companyId);
     setQueueState(newState);
-  }, []);
-
-  const markCurrentAsAttended = useCallback(() => {
-    const currentState = getQueueStateFromStorage();
-    // Only act if there is a ticket being currently served
+  }, [companyId]);
+  
+  const finishCurrentTicket = useCallback(() => {
+    if (!companyId) return;
+    const currentState = getQueueStateFromStorage(companyId);
     if (!currentState.currentTicket) {
       return;
     }
 
     const newHistory = [currentState.currentTicket, ...(currentState.history || [])];
-
+    
     const newState: QueueState = {
       ...currentState,
-      currentTicket: null, // Clear the current ticket
+      currentTicket: null,
       history: newHistory.slice(0, 50),
     };
 
-    setQueueStateInStorage(newState);
+    setQueueStateInStorage(newState, companyId);
     setQueueState(newState);
-  }, []);
+  }, [companyId]);
 
   const resetQueue = useCallback(() => {
-    // This will reset everything, including the history, back to the initial state.
+    if (!companyId) return;
     const newState = getInitialState();
-    setQueueStateInStorage(newState);
+    setQueueStateInStorage(newState, companyId);
     setQueueState(newState);
-  }, []);
+  }, [companyId]);
 
-  return { queueState, generateTicket, callNextTicket, resetQueue, markCurrentAsAttended, finishCurrentTicket };
+  return { queueState, generateTicket, callNextTicket, resetQueue, finishCurrentTicket };
 };

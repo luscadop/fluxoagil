@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HashRouter, Routes, Route, NavLink } from 'react-router-dom';
 import ClientView from './components/ClientView';
@@ -26,15 +27,21 @@ const SettingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const LogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
+  </svg>
+);
 
 const App: React.FC = () => {
   return (
     <HashRouter>
-      <div className="min-h-screen font-sans text-gray-800 pb-24">
-        <header className="bg-white shadow-sm sticky top-0 z-10">
+      <div className="min-h-screen font-sans pb-24">
+        <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
           <div className="container mx-auto px-4 py-3">
-            <div className="text-2xl font-bold text-blue-600">
-              FLUXO<span className="font-light">ÁGIL</span>
+            <div className="flex items-center space-x-2 text-2xl font-bold text-sky-400">
+                <LogoIcon className="h-7 w-7"/>
+                <span>FLUXO<span className="font-light text-gray-300">ÁGIL</span></span>
             </div>
           </div>
         </header>
@@ -43,19 +50,20 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<ClientView />} />
             <Route path="/admin" element={<AdminAuth />} />
+            <Route path="/tv/:companyId" element={<TvView />} />
             <Route path="/tv" element={<TvView />} />
             <Route path="/history" element={<HistoryView />} />
             <Route path="/settings" element={<SettingsView />} />
           </Routes>
         </main>
 
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10">
+        <nav className="fixed bottom-0 left-0 right-0 bg-gray-800/90 backdrop-blur-sm border-t border-gray-700 shadow-lg z-10">
           <div className="container mx-auto flex justify-around max-w-lg">
             <NavLink 
               to="/" 
               className={({ isActive }) => 
                 `flex flex-col items-center justify-center pt-3 pb-2 w-full transition-colors duration-200 ${
-                  isActive ? 'text-blue-600' : 'text-gray-500 hover:text-blue-500'
+                  isActive ? 'text-sky-400' : 'text-gray-400 hover:text-sky-400'
                 }`
               }
             >
@@ -66,7 +74,7 @@ const App: React.FC = () => {
               to="/history" 
               className={({ isActive }) => 
                 `flex flex-col items-center justify-center pt-3 pb-2 w-full transition-colors duration-200 ${
-                  isActive ? 'text-blue-600' : 'text-gray-500 hover:text-blue-500'
+                  isActive ? 'text-sky-400' : 'text-gray-400 hover:text-sky-400'
                 }`
               }
             >
@@ -77,7 +85,7 @@ const App: React.FC = () => {
               to="/settings" 
               className={({ isActive }) => 
                 `flex flex-col items-center justify-center pt-3 pb-2 w-full transition-colors duration-200 ${
-                  isActive ? 'text-blue-600' : 'text-gray-500 hover:text-blue-500'
+                  isActive ? 'text-sky-400' : 'text-gray-400 hover:text-sky-400'
                 }`
               }
             >

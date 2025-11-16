@@ -1,107 +1,178 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useQueue } from '../hooks/useQueue';
+import { useCompanyProfile } from '../hooks/useCompanyProfile';
+import EditProfileModal from './EditProfileModal';
+import { CompanyProfile } from '../types';
 
 interface AdminViewProps {
   onLogout: () => void;
 }
 
+const ADMIN_COMPANY_ID_KEY = 'fluxoagil-admin-company-id';
+const COMPANY_PASSWORDS_KEY = 'fluxoagil-company-passwords';
+
+
 const AdminView: React.FC<AdminViewProps> = ({ onLogout }) => {
-  const { queueState, callNextTicket, resetQueue, finishCurrentTicket } = useQueue();
+  const [companyId] = useState<string | null>(() => sessionStorage.getItem(ADMIN_COMPANY_ID_KEY));
+  const { queueState, callNextTicket, resetQueue, finishCurrentTicket } = useQueue(companyId);
+  const { profile, updateProfile } = useCompanyProfile(companyId);
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSaveProfile = (updatedProfile: CompanyProfile) => {
+    updateProfile(updatedProfile);
+    setIsModalOpen(false);
+  };
+
+  const handlePasswordChange = (newPassword: string) => {
+    if (newPassword && companyId) {
+      try {
+        const passwordsStr = localStorage.getItem(COMPANY_PASSWORDS_KEY);
+        const passwords = passwordsStr ? JSON.parse(passwordsStr) : {};
+        passwords[companyId] = newPassword;
+        localStorage.setItem(COMPANY_PASSWORDS_KEY, JSON.stringify(passwords));
+        alert('Senha alterada com sucesso!');
+      } catch (error) {
+        console.error("Failed to update password", error);
+        alert('Falha ao alterar a senha.');
+      }
+    }
+  };
+  
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-      
-      <div className="md:col-span-1 flex flex-col space-y-6">
-        <div className="bg-white p-6 rounded-2xl shadow-lg text-center">
-          <p className="text-lg text-gray-500">Atendendo Agora</p>
-          <h2 className="text-6xl font-bold text-blue-600 my-2">{queueState.currentTicket || 'N/A'}</h2>
+    <div>
+      {isModalOpen && profile && companyId && (
+        <EditProfileModal
+          companyId={companyId}
+          initialProfile={profile}
+          onSave={handleSaveProfile}
+          onPasswordChange={handlePasswordChange}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+
+      <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+            {profile?.logoBase64 && (
+            <img 
+                src={profile.logoBase64} 
+                alt="Logo" 
+                className="h-12 w-12 rounded-full object-cover bg-gray-700"
+            />
+            )}
+            <div className="text-center sm:text-left">
+            <h1 className="text-2xl font-bold text-gray-200">Painel de Controle</h1>
+            <p className="text-md text-gray-400">
+                Gerenciando fila para: <span className="font-semibold text-sky-400">{profile?.displayName || companyId}</span>
+            </p>
+            </div>
         </div>
-        
-        <div className="flex flex-col space-y-3">
-          <button
-            onClick={callNextTicket}
-            disabled={queueState.queue.length === 0}
-            className="w-full bg-blue-600 text-white font-bold text-xl py-4 rounded-xl shadow-md hover:bg-blue-700 transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            CHAMAR PRÓXIMO
-          </button>
-          <button
-            onClick={finishCurrentTicket}
-            disabled={!queueState.currentTicket}
-            className="w-full bg-green-600 text-white font-bold text-lg py-3 rounded-xl shadow-md hover:bg-green-700 transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            FINALIZAR ATENDIMENTO
-          </button>
-        </div>
-        
-        <div className="pt-4 space-y-4 border-t">
-          <button
-            onClick={() => { if(window.confirm('Tem certeza que deseja zerar a fila? Esta ação não pode ser desfeita.')) resetQueue() }}
-            className="w-full bg-red-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-red-700 transition-all duration-300"
-          >
-            ZERAR FILA
-          </button>
-          <button
-            onClick={onLogout}
-            className="w-full bg-gray-200 text-gray-700 font-semibold py-2 rounded-xl hover:bg-gray-300 transition-all duration-300"
-          >
-            Sair
-          </button>
-        </div>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-gray-200 font-semibold py-2 px-4 rounded-lg transition-colors"
+          aria-label="Editar perfil da empresa"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z" />
+          </svg>
+          <span>Editar Perfil</span>
+        </button>
       </div>
 
-      <div className="md:col-span-2 flex flex-col gap-8">
-        {/* Card de Próximos na Fila */}
-        <div className="bg-white p-6 rounded-2xl shadow-lg">
-          <h3 className="text-2xl font-bold text-gray-700 mb-4 border-b pb-2">
-            Próximos na Fila ({queueState.queue.length})
-          </h3>
-          {queueState.queue.length > 0 ? (
-            <ul className="space-y-3 max-h-80 overflow-y-auto pr-2">
-              {queueState.queue.map((ticket, index) => (
-                <li key={ticket} className={`flex items-center justify-between p-4 rounded-lg ${index === 0 ? 'bg-blue-100 border-l-4 border-blue-500' : 'bg-gray-100'}`}>
-                  <span className="text-xl font-semibold text-gray-800">{ticket}</span>
-                  {index === 0 && <span className="text-sm font-bold text-blue-600">PRÓXIMO</span>}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="flex flex-col items-center justify-center text-center text-gray-500 py-10">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-              <p className="text-lg font-medium">A fila está vazia.</p>
-              <p className="text-sm">Aguardando novos clientes.</p>
-            </div>
-          )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <div className="md:col-span-1 flex flex-col space-y-6">
+          <div className="bg-gray-800 p-6 rounded-2xl shadow-lg text-center">
+            <p className="text-lg text-gray-400">Atendendo Agora</p>
+            <h2 className="text-6xl font-bold text-sky-400 my-2">{queueState.currentTicket || 'N/A'}</h2>
+          </div>
+          
+          <div className="flex flex-col space-y-3">
+            <button
+              onClick={callNextTicket}
+              disabled={queueState.queue.length === 0}
+              className="w-full bg-blue-600 text-white font-bold text-xl py-4 rounded-xl shadow-md hover:bg-blue-700 transition-all duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed"
+            >
+              CHAMAR PRÓXIMO
+            </button>
+            <button
+              onClick={finishCurrentTicket}
+              disabled={!queueState.currentTicket}
+              className="w-full bg-green-600 text-white font-bold text-lg py-3 rounded-xl shadow-md hover:bg-green-700 transition-all duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed"
+            >
+              FINALIZAR ATENDIMENTO
+            </button>
+          </div>
+          
+          <div className="pt-4 space-y-4 border-t border-gray-700">
+            <button
+              onClick={() => { if(window.confirm('Tem certeza que deseja zerar a fila? Esta ação não pode ser desfeita.')) resetQueue() }}
+              className="w-full bg-red-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-red-700 transition-all duration-300"
+            >
+              ZERAR FILA
+            </button>
+            <button
+              onClick={onLogout}
+              className="w-full bg-gray-600 text-gray-100 font-semibold py-2 rounded-xl hover:bg-gray-500 transition-all duration-300"
+            >
+              Sair
+            </button>
+          </div>
         </div>
 
-        {/* Card de Histórico */}
-        <div className="bg-white p-6 rounded-2xl shadow-lg">
-          <h3 className="text-2xl font-bold text-gray-700 mb-4 border-b pb-2">
-            Histórico de Atendimento ({queueState.history.length})
-          </h3>
-          {queueState.history && queueState.history.length > 0 ? (
-            <ul className="space-y-3 max-h-80 overflow-y-auto pr-2">
-              {queueState.history.map((ticket, index) => (
-                <li key={`${ticket}-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-lg font-medium text-gray-600">{ticket}</span>
-                  <span className="text-sm text-gray-400">Atendido</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="flex flex-col items-center justify-center text-center text-gray-500 py-10">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-              </svg>
-              <p className="text-lg font-medium">Nenhum atendimento no histórico.</p>
-            </div>
-          )}
+        <div className="md:col-span-2 flex flex-col gap-8">
+          {/* Card de Próximos na Fila */}
+          <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
+            <h3 className="text-2xl font-bold text-gray-200 mb-4 border-b border-gray-700 pb-2">
+              Próximos na Fila ({queueState.queue.length})
+            </h3>
+            {queueState.queue.length > 0 ? (
+              <ul className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                {queueState.queue.map((ticket, index) => (
+                  <li key={ticket} className={`flex items-center justify-between p-4 rounded-lg ${index === 0 ? 'bg-sky-900/50 border-l-4 border-sky-500' : 'bg-gray-700'}`}>
+                    <span className="text-xl font-semibold text-gray-100">{ticket}</span>
+                    {index === 0 && <span className="text-sm font-bold text-sky-400">PRÓXIMO</span>}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center text-gray-400 py-10">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <p className="text-lg font-medium">A fila está vazia.</p>
+                <p className="text-sm">Aguardando novos clientes.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Card de Histórico */}
+          <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
+            <h3 className="text-2xl font-bold text-gray-200 mb-4 border-b border-gray-700 pb-2">
+              Histórico de Atendimento ({queueState.history.length})
+            </h3>
+            {queueState.history && queueState.history.length > 0 ? (
+              <ul className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                {queueState.history.map((ticket, index) => (
+                  <li key={`${ticket}-${index}`} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                    <span className="text-lg font-medium text-gray-300">{ticket}</span>
+                    <span className="text-sm text-gray-500">Atendido</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center text-gray-400 py-10">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+                <p className="text-lg font-medium">Nenhum atendimento no histórico.</p>
+              </div>
+            )}
+          </div>
         </div>
+
       </div>
-
     </div>
   );
 };
